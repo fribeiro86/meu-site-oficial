@@ -9,6 +9,16 @@
           "value": "portal.peritofabricioribeiro.com.br"
         }
       ]
+    },
+    {
+      "source": "/",
+      "destination": "/index.html",
+      "has": [
+        {
+          "type": "host",
+          "value": "peritofabricioribeiro.com.br"
+        }
+      ]
     }
   ]
 }
