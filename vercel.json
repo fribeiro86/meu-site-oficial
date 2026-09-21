@@ -1,0 +1,14 @@
+{
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/portal/index.html",
+      "has": [
+        {
+          "type": "host",
+          "value": "portal.peritofabricioribeiro.com.br"
+        }
+      ]
+    }
+  ]
+}
