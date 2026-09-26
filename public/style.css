@@ -559,3 +559,110 @@
                 margin-right: auto;
             }
         }
+/* ===== PÁGINAS LEGAIS ===== */
+.legal-page {
+    padding: 80px 0 60px;
+    background: var(--black-1, #0a0a0a);
+    min-height: 60vh;
+}
+
+.legal-container {
+    max-width: 880px;
+    margin: 0 auto;
+}
+
+.legal-eyebrow {
+    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--neon, #e6320b);
+    margin-bottom: 16px;
+}
+
+.legal-title {
+    font-family: var(--font-display, 'Archivo', sans-serif);
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #ffffff;
+    margin-bottom: 12px;
+    line-height: 1.1;
+}
+
+.legal-updated {
+    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(230, 50, 11, 0.2);
+}
+
+.legal-content h2 {
+    font-family: var(--font-display, 'Archivo', sans-serif);
+    font-size: 20px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #ffffff;
+    margin-top: 40px;
+    margin-bottom: 16px;
+    padding-left: 14px;
+    border-left: 3px solid var(--neon, #e6320b);
+}
+
+.legal-content p {
+    font-family: var(--font-body, 'Inter', sans-serif);
+    font-size: 15px;
+    line-height: 1.75;
+    color: #c5c5c5;
+    margin-bottom: 16px;
+}
+
+.legal-content ul {
+    margin: 16px 0 24px;
+    padding-left: 24px;
+}
+
+.legal-content ul li {
+    font-family: var(--font-body, 'Inter', sans-serif);
+    font-size: 15px;
+    line-height: 1.75;
+    color: #c5c5c5;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.legal-content ul li::marker {
+    color: var(--neon, #e6320b);
+}
+
+.legal-content strong {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.legal-content a {
+    color: var(--neon, #e6320b);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.legal-content a:hover {
+    color: #fff;
+}
+
+.legal-back {
+    margin-top: 60px;
+    padding-top: 40px;
+    border-top: 1px solid rgba(230, 50, 11, 0.2);
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .legal-page { padding: 60px 0 40px; }
+    .legal-content h2 { font-size: 17px; margin-top: 32px; }
+    .legal-content p,
+    .legal-content ul li { font-size: 14px; }
+}
