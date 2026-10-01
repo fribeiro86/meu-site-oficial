@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Relatório de Evidência Digital & Hash SHA-256</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: '#F15A24',
+                            dark: '#D04515',
+                            light: '#F87A4E',
+                        },
+                        darkBg: '#09090b',
+                        cardBg: '#18181b',
+                        inputBg: '#27272a',
+                        borderBg: '#3f3f46'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- jsPDF & AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #09090b;
+            color: #f4f4f5;
+        }
+        .hash-text {
+            font-family: 'JetBrains Mono', monospace;
+            word-break: break-all;
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #09090b; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+        
+        .pulse-border {
+            animation: pulse-border-anim 2s infinite;
+        }
+        @keyframes pulse-border-anim {
+            0% { border-color: rgba(241, 90, 36, 0.2); }
+            50% { border-color: rgba(241, 90, 36, 0.8); }
+            100% { border-color: rgba(241, 90, 36, 0.2); }
+        }
+        
+        /* Loading spinner */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-left-color: #F15A24;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen selection:bg-brand selection:text-white pb-24">
+
+    <!-- 1. Professional Identification Modal -->
+    <div id="authModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-cardBg border border-borderBg rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-brand"></div>
+            
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 mx-auto rounded-full bg-brand/10 border border-brand/20 flex items-center justify-center text-brand text-2xl mb-4">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </div>
+                <h2 class="text-xl font-bold text-white mb-2">Identificação Profissional</h2>
+                <p class="text-xs text-zinc-400">
+                    Acesso restrito. Insira seus dados para constar no Relatório de Integridade.
+                    Os dados são processados localmente e apagados ao fechar o navegador.
+                </p>
+            </div>
+
+            <form id="expertForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-400 mb-1">NOME COMPLETO *</label>
+                    <input type="text" id="expertName" required placeholder="Ex: Dr. João Silva" 
+                        class="w-full bg-inputBg border border-borderBg rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-zinc-400 mb-1">OAB OU CPF *</label>
+                    <input type="text" id="expertDoc" required placeholder="Ex: OAB/SP 123.456" 
+                        class="w-full bg-inputBg border border-borderBg rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-brand transition">
+                </div>
+                <button type="submit" class="w-full py-3.5 mt-2 rounded-xl text-sm font-bold text-white bg-brand hover:bg-brand-dark transition shadow-lg shadow-brand/20 active:scale-95 flex items-center justify-center gap-2">
+                    <span>Acessar Sistema Seguramente</span> <i class="fa-solid fa-lock text-xs"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="border-b border-borderBg bg-cardBg/90 backdrop-blur-md sticky top-0 z-40 px-4 py-3 sm:px-6">
+        <div class="max-w-3xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-lg bg-brand flex items-center justify-center text-white shadow-lg shadow-brand/20 shrink-0">
+                    <i class="fa-solid fa-fingerprint text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-sm sm:text-base tracking-tight text-white leading-tight">
+                        Autoria e Integridade Digital
+                    </h1>
+                    <p class="text-[11px] text-zinc-400 truncate max-w-[200px]" id="headerExpertDisplay">Aguardando identificação...</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-3xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+        <!-- 2. Evidence Provenance Form -->
+        <section class="bg-cardBg border border-borderBg rounded-2xl p-5 sm:p-6 shadow-md">
+            <h2 class="text-base font-bold text-white flex items-center gap-2 mb-4">
+                <i class="fa-solid fa-sitemap text-brand"></i> Origem e Contexto da Evidência
+            </h2>
+            <p class="text-xs text-zinc-400 mb-5">Preencha os dados de proveniência para garantir a rastreabilidade (cadeia de custódia) da prova digital.</p>
+            
+            <form id="provenanceForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1 md:col-span-1">
+                    <label class="block text-xs font-semibold text-zinc-400">Nº DO PROCESSO / PROCEDIMENTO</label>
+                    <input type="text" id="provProcess" placeholder="Ex: 5001906-91.2025..." class="w-full bg-inputBg border border-borderBg rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand transition">
+                </div>
+                
+                <div class="space-y-1 md:col-span-1">
+                    <label class="block text-xs font-semibold text-zinc-400">COMARCA / JUÍZO</label>
+                    <input type="text" id="provComarca" placeholder="Ex: 1ª Vara Cível de SP" class="w-full bg-inputBg border border-borderBg rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand transition">
+                </div>
+
+                <div class="space-y-1 md:col-span-2">
+                    <label class="block text-xs font-semibold text-zinc-400">CANAL DE RECEBIMENTO *</label>
+                    <select id="provChannel" required class="w-full bg-inputBg border border-borderBg rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand transition appearance-none">
+                        <option value="">Selecione o meio de aquisição...</option>
+                        <option value="E-mail">E-mail</option>
+                        <option value="Repositório em Nuvem (Drive/OneDrive)">Repositório em Nuvem (Drive/OneDrive)</option>
+                        <option value="Portal do Cliente / Internet Banking">Portal do Cliente / Internet Banking</option>
+                        <option value="WhatsApp / Mensageria">WhatsApp / Mensageria</option>
+                        <option value="Mídia Física (Pendrive, CD, HD)">Mídia Física (Pendrive, CD, HD)</option>
+                        <option value="Outro">Outro (especificar nas observações)</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1 md:col-span-1">
+                    <label class="block text-xs font-semibold text-zinc-400">REMETENTE / FONTE *</label>
+                    <input type="text" id="provSender" required placeholder="Ex: suporte@banco.com" class="w-full bg-inputBg border border-borderBg rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand transition">
+                </div>
+
+                <div class="space-y-1 md:col-span-1">
+                    <label class="block text-xs font-semibold text-zinc-400">DATA DE RECEBIMENTO *</label>
+                    <input type="date" id="provDate" required class="w-full bg-inputBg border border-borderBg rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand transition [color-scheme:dark]">
+                </div>
+
+                <div class="space-y-1 md:col-span-2">
+                    <label class="block text-xs font-semibold text-zinc-400">CONTEXTO / OBSERVAÇÕES</label>
+                    <textarea id="provContext" rows="2" placeholder="Descreva brevemente como obteve o arquivo..." class="w-full bg-inputBg border border-borderBg rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand transition resize-none"></textarea>
+                </div>
+            </form>
+        </section>
+
+        <!-- 3. File Upload Dropzone -->
+        <section>
+            <div id="dropzone" class="border-2 border-dashed border-borderBg hover:border-brand rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 bg-inputBg/30 hover:bg-inputBg/80 group relative">
+                <input type="file" id="fileInput" multiple class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                <div class="space-y-4 pointer-events-none">
+                    <div class="w-16 h-16 mx-auto rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 text-2xl group-hover:text-brand group-hover:scale-110 transition-transform duration-300">
+                        <i class="fa-solid fa-file-shield"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-white">Toque ou arraste os arquivos aqui</p>
+                        <p class="text-xs text-zinc-400 mt-1">Cálculo local (arquivos não são enviados à internet)</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results -->
+        <section class="space-y-4 pt-2">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-white">Arquivos Processados</h3>
+                <span class="text-xs text-zinc-500 bg-zinc-900 px-2 py-1 rounded-md" id="statsDisplay">0 arquivos</span>
+            </div>
+            
+            <div id="resultsContainer" class="space-y-3">
+                <div class="text-center p-6 border border-borderBg rounded-xl bg-cardBg text-zinc-500 text-sm">
+                    Nenhum arquivo inserido para análise.
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Action Bar / Footer -->
+    <div class="fixed bottom-0 left-0 w-full bg-cardBg border-t border-borderBg p-4 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+        <div class="max-w-3xl mx-auto flex items-center justify-between gap-3">
+            <button id="clearBtn" class="px-4 py-3 rounded-xl text-sm font-medium text-zinc-400 hover:text-white bg-inputBg hover:bg-zinc-700 transition hidden touch-manipulation">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+            <button id="generatePdfBtn" disabled class="flex-1 py-3.5 rounded-xl text-sm font-bold text-white bg-brand hover:bg-brand-dark transition shadow-lg shadow-brand/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-2 touch-manipulation active:scale-[0.98]">
+                <i class="fa-solid fa-file-pdf"></i> Gerar Relatório Pericial
+            </button>
+        </div>
+    </div>
+
+    <!-- 7. Chain of Custody Receipt Modal -->
+    <div id="receiptModal" class="hidden fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-cardBg border border-borderBg rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative">
+            <div class="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
+            
+            <div class="text-center mb-5">
+                <div class="w-14 h-14 mx-auto rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-500 text-xl mb-3">
+                    <i class="fa-solid fa-check-double"></i>
+                </div>
+                <h2 class="text-lg font-bold text-white mb-1">Relatório Gerado com Sucesso</h2>
+                <p class="text-xs text-zinc-400">A Cadeia de Custódia exige o encadeamento dos hashes.</p>
+            </div>
+
+            <div class="bg-inputBg rounded-xl p-4 border border-borderBg mb-5">
+                <p class="text-[11px] font-semibold text-zinc-400 mb-1">HASH SHA-256 DO RELATÓRIO PDF GERADO:</p>
+                <p class="hash-text text-xs text-green-400 select-all p-2 bg-black/50 rounded-lg border border-zinc-800" id="receiptPdfHash">-</p>
+                <p class="text-[10px] text-zinc-500 mt-2 leading-tight">Este hash garante que o relatório em si não foi adulterado após a geração.</p>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <button id="downloadReceiptBtn" class="w-full py-3 rounded-xl text-sm font-bold text-zinc-900 bg-white hover:bg-zinc-200 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-link"></i> Baixar Recibo de Encadeamento
+                </button>
+                <button onclick="document.getElementById('receiptModal').classList.add('hidden')" class="w-full py-3 rounded-xl text-sm font-medium text-white border border-borderBg hover:bg-inputBg transition">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Models
+        const sessionState = {
+            professional: { name: '', doc: '' },
+            provenance: {},
+            files: [], // { id, name, size, type, hash, status, error }
+            metadata: {
+                ip: 'Obtendo...',
+                userAgent: navigator.userAgent,
+                screenRes: `${window.screen.width}x${window.screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                time: null
+            },
+            pdfData: {
+                name: '',
+                hash: ''
+            }
+        };
+
+        // DOM Elements
+        const authModal = document.getElementById('authModal');
+        const expertForm = document.getElementById('expertForm');
+        const headerExpertDisplay = document.getElementById('headerExpertDisplay');
+        
+        const provenanceForm = document.getElementById('provenanceForm');
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        
+        const resultsContainer = document.getElementById('resultsContainer');
+        const statsDisplay = document.getElementById('statsDisplay');
+        const clearBtn = document.getElementById('clearBtn');
+        const generatePdfBtn = document.getElementById('generatePdfBtn');
+        
+        const receiptModal = document.getElementById('receiptModal');
+        const receiptPdfHash = document.getElementById('receiptPdfHash');
+        const downloadReceiptBtn = document.getElementById('downloadReceiptBtn');
+
+        // Fetch IP on load
+        async function fetchIP() {
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                sessionState.metadata.ip = data.ip;
+            } catch (e) {
+                sessionState.metadata.ip = 'Indisponível / Offline';
+                console.warn('IP fetch failed', e);
+            }
+        }
+        fetchIP();
+
+        // Handle Auth
+        expertForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('expertName').value.trim();
+            const doc = document.getElementById('expertDoc').value.trim();
+            
+            if(name && doc) {
+                sessionState.professional.name = name;
+                sessionState.professional.doc = doc;
+                headerExpertDisplay.textContent = `${name} | ${doc}`;
+                authModal.classList.add('hidden');
+            }
+        });
+
+        // Validation for PDF Generation
+        function checkReadyState() {
+            const hasFiles = sessionState.files.length > 0;
+            const allHashed = sessionState.files.every(f => f.status === 'completed' || f.status === 'error');
+            const hasPending = sessionState.files.some(f => f.status === 'processing');
+            
+            const provChannel = document.getElementById('provChannel').value;
+            const provSender = document.getElementById('provSender').value.trim();
+            const provDate = document.getElementById('provDate').value;
+            
+            const hasProvenance = provChannel !== '' && provSender !== '' && provDate !== '';
+
+            generatePdfBtn.disabled = !(hasFiles && allHashed && !hasPending && hasProvenance);
+            
+            // Auto update provenance state
+            if(hasProvenance) {
+                sessionState.provenance = {
+                    process: document.getElementById('provProcess').value.trim() || 'Não informado',
+                    comarca: document.getElementById('provComarca').value.trim() || 'Não informada',
+                    channel: provChannel,
+                    sender: provSender,
+                    date: provDate,
+                    context: document.getElementById('provContext').value.trim() || 'Sem observações adicionais.'
+                };
+            }
+        }
+
+        // Add event listeners to form to check readiness
+        ['provChannel', 'provSender', 'provDate', 'provProcess', 'provComarca', 'provContext'].forEach(id => {
+            document.getElementById(id).addEventListener('input', checkReadyState);
+            document.getElementById(id).addEventListener('change', checkReadyState);
+        });
+
+        // File Drag & Drop logic
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+            dropzone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+        });
+
+        dropzone.addEventListener('dragover', () => dropzone.classList.add('pulse-border'));
+        dropzone.addEventListener('dragleave', () => dropzone.classList.remove('pulse-border'));
+        dropzone.addEventListener('drop', (e) => {
+            dropzone.classList.remove('pulse-border');
+            handleFiles(e.dataTransfer.files);
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+            fileInput.value = ''; // reset
+        });
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function handleFiles(files) {
+            if(!files || files.length === 0) return;
+            
+            Array.from(files).forEach(file => {
+                const id = Math.random().toString(36).substring(2, 9);
+                const fileObj = {
+                    id,
+                    file: file, // Keep reference for reading
+                    name: file.name,
+                    size: file.size,
+                    hash: null,
+                    status: 'processing'
+                };
+                sessionState.files.push(fileObj);
+                renderResults();
+                calculateHash(fileObj);
+            });
+        }
+
+        async function calculateHash(fileObj) {
+            try {
+                // Read entire file as ArrayBuffer
+                const buffer = await fileObj.file.arrayBuffer();
+                const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                fileObj.hash = hashHex;
+                fileObj.status = 'completed';
+            } catch (err) {
+                console.error("Error hashing file:", err);
+                fileObj.status = 'error';
+                fileObj.hash = 'ERRO DE LEITURA';
+            }
+            
+            renderResults();
+            checkReadyState();
+        }
+
+        function renderResults() {
+            statsDisplay.textContent = `${sessionState.files.length} arquivo(s)`;
+            
+            if(sessionState.files.length === 0) {
+                resultsContainer.innerHTML = `<div class="text-center p-6 border border-borderBg rounded-xl bg-cardBg text-zinc-500 text-sm">Nenhum arquivo inserido para análise.</div>`;
+                clearBtn.classList.add('hidden');
+                checkReadyState();
+                return;
+            }
+            
+            clearBtn.classList.remove('hidden');
+            let html = '';
+            
+            sessionState.files.forEach(f => {
+                html += `
+                <div class="bg-inputBg border border-borderBg rounded-xl p-4 flex flex-col gap-3">
+                    <div class="flex justify-between items-start">
+                        <div class="flex gap-3 overflow-hidden">
+                            <div class="w-10 h-10 rounded bg-zinc-800 flex items-center justify-center text-zinc-400 shrink-0">
+                                <i class="fa-solid fa-file"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-white truncate max-w-[200px] sm:max-w-[400px]">${f.name}</p>
+                                <p class="text-xs text-zinc-400">${formatBytes(f.size)}</p>
+                            </div>
+                        </div>
+                        <button onclick="removeFile('${f.id}')" class="text-zinc-500 hover:text-red-400 p-1 touch-manipulation shrink-0">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="bg-black/40 rounded border border-zinc-800 p-2 text-xs flex items-center justify-between gap-2">
+                        ${f.status === 'processing' 
+                            ? `<span class="flex items-center gap-2 text-brand"><div class="loader"></div> Calculando SHA-256...</span>` 
+                            : f.status === 'error'
+                                ? `<span class="text-red-400 font-bold">Falha ao processar</span>`
+                                : `<span class="hash-text text-zinc-300 break-all select-all flex-1">${f.hash}</span>`
+                        }
+                    </div>
+                </div>`;
+            });
+            
+            resultsContainer.innerHTML = html;
+        }
+
+        window.removeFile = function(id) {
+            sessionState.files = sessionState.files.filter(f => f.id !== id);
+            renderResults();
+            checkReadyState();
+        }
+        
+        clearBtn.addEventListener('click', () => {
+            sessionState.files = [];
+            renderResults();
+        });
+
+        // Generate Main PDF
+        generatePdfBtn.addEventListener('click', async () => {
+            generatePdfBtn.disabled = true;
+            generatePdfBtn.innerHTML = '<div class="loader mr-2"></div> Gerando...';
+            sessionState.metadata.time = new Date().toLocaleString('pt-BR');
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                const pageWidth = doc.internal.pageSize.width;
+                const pageHeight = doc.internal.pageSize.height;
+                
+                // Colors
+                const darkColor = [24, 24, 27];
+                const brandColor = [241, 90, 36];
+                const lightText = [161, 161, 170];
+
+                let yPos = 20;
+
+                // --- HEADER ---
+                doc.setFillColor(darkColor[0], darkColor[1], darkColor[2]);
+                doc.rect(0, 0, pageWidth, 40, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(16);
+                doc.setFont('Inter', 'bold');
+                doc.text('RELATÓRIO DE INTEGRIDADE E AUTORIA DE EVIDÊNCIA DIGITAL', pageWidth/2, 18, { align: 'center' });
+                
+                doc.setFillColor(brandColor[0], brandColor[1], brandColor[2]);
+                doc.rect(0, 40, pageWidth, 2, 'F');
+                
+                doc.setFontSize(10);
+                doc.setFont('Inter', 'normal');
+                doc.text(`Responsável Técnico: ${sessionState.professional.name} | Doc: ${sessionState.professional.doc}`, pageWidth/2, 26, { align: 'center' });
+                doc.text(`Data da Emissão: ${sessionState.metadata.time}`, pageWidth/2, 32, { align: 'center' });
+                
+                yPos = 55;
+
+                // --- METADADOS DO AMBIENTE ---
+                doc.setTextColor(39, 39, 42); // Zinc-800
+                doc.setFontSize(12);
+                doc.setFont('Inter', 'bold');
+                doc.text('1. DADOS DE AMBIENTE DA COLETA', 14, yPos);
+                
+                yPos += 8;
+                doc.setFontSize(9);
+                doc.setFont('Inter', 'normal');
+                doc.setTextColor(63, 63, 70); // Zinc-700
+                doc.text(`Endereço IP (Público): ${sessionState.metadata.ip}`, 14, yPos); yPos += 6;
+                doc.text(`Fuso Horário (Timezone): ${sessionState.metadata.timezone}`, 14, yPos); yPos += 6;
+                doc.text(`Resolução de Tela: ${sessionState.metadata.screenRes}`, 14, yPos); yPos += 6;
+                
+                // Wrap User agent
+                const uaLines = doc.splitTextToSize(`Agente (Navegador): ${sessionState.metadata.userAgent}`, 180);
+                doc.text(uaLines, 14, yPos);
+                yPos += (uaLines.length * 6) + 6;
+
+                // --- PROVENIÊNCIA ---
+                doc.setFontSize(12);
+                doc.setFont('Inter', 'bold');
+                doc.setTextColor(39, 39, 42);
+                doc.text('2. ORIGEM E CONTEXTO DA EVIDÊNCIA', 14, yPos);
+                
+                yPos += 8;
+                doc.setFontSize(9);
+                doc.setFont('Inter', 'normal');
+                doc.setTextColor(63, 63, 70);
+                
+                doc.text(`Processo/Procedimento: ${sessionState.provenance.process}`, 14, yPos); yPos += 6;
+                doc.text(`Comarca/Juízo: ${sessionState.provenance.comarca}`, 14, yPos); yPos += 6;
+                doc.text(`Canal de Recebimento: ${sessionState.provenance.channel}`, 14, yPos); yPos += 6;
+                doc.text(`Remetente/Fonte: ${sessionState.provenance.sender}`, 14, yPos); yPos += 6;
+                
+                // Format input date
+                const dateParts = sessionState.provenance.date.split('-');
+                const formattedDate = dateParts.length === 3 ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}` : sessionState.provenance.date;
+                doc.text(`Data de Recebimento da Prova: ${formattedDate}`, 14, yPos); yPos += 6;
+                
+                const ctxLines = doc.splitTextToSize(`Contexto/Observações: ${sessionState.provenance.context}`, 180);
+                doc.text(ctxLines, 14, yPos);
+                yPos += (ctxLines.length * 6) + 10;
+
+                // --- TABELA DE HASHES ---
+                doc.setFontSize(12);
+                doc.setFont('Inter', 'bold');
+                doc.setTextColor(39, 39, 42);
+                doc.text('3. RASTREABILIDADE CRIPTOGRÁFICA (SHA-256)', 14, yPos);
+                
+                const tableBody = sessionState.files.filter(f => f.status === 'completed').map(f => [
+                    f.name,
+                    formatBytes(f.size),
+                    f.hash
+                ]);
+
+                doc.autoTable({
+                    startY: yPos + 5,
+                    head: [['Nome do Arquivo', 'Tamanho', 'Hash SHA-256']],
+                    body: tableBody,
+                    theme: 'grid',
+                    headStyles: { fillColor: [24, 24, 27], textColor: [255,255,255], fontStyle: 'bold' },
+                    columnStyles: {
+                        0: { cellWidth: 50 },
+                        1: { cellWidth: 20 },
+                        2: { cellWidth: 110, font: 'Courier', fontSize: 8, overflow: 'linebreak' }
+                    },
+                    styles: { fontSize: 8, cellPadding: 3 },
+                    didDrawPage: (data) => {
+                        // Footer
+                        doc.setFontSize(8);
+                        doc.setTextColor(150, 150, 150);
+                        doc.text(`Gerado por Algoritmo Local - Página ${doc.internal.getNumberOfPages()}`, 14, pageHeight - 10);
+                    }
+                });
+
+                // Generate Blob and download
+                const pdfBlob = doc.output('blob');
+                const pdfFilename = `Relatorio_Evidencia_${Date.now()}.pdf`;
+                doc.save(pdfFilename);
+
+                // --- Calculate Hash of the newly generated PDF ---
+                const pdfBuffer = await pdfBlob.arrayBuffer();
+                const pdfHashBuffer = await crypto.subtle.digest('SHA-256', pdfBuffer);
+                const pdfHashArray = Array.from(new Uint8Array(pdfHashBuffer));
+                const pdfHashHex = pdfHashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+                sessionState.pdfData.name = pdfFilename;
+                sessionState.pdfData.hash = pdfHashHex;
+
+                // Show Receipt Modal
+                receiptPdfHash.textContent = pdfHashHex;
+                receiptModal.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("PDF Generation Error", error);
+                alert("Ocorreu um erro ao gerar o relatório.");
+            } finally {
+                generatePdfBtn.disabled = false;
+                generatePdfBtn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Gerar Relatório Pericial';
+            }
+        });
+
+        downloadReceiptBtn.addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            
+            doc.setFillColor(24, 24, 27);
+            doc.rect(0, 0, 210, 30, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont('Inter', 'bold');
+            doc.text('RECIBO DE ENCADEAMENTO DE CADEIA DE CUSTÓDIA', 105, 18, { align: 'center' });
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(11);
+            doc.text('Metadados do Relatório Principal', 14, 45);
+            
+            doc.setFont('Inter', 'normal');
+            doc.setFontSize(10);
+            doc.text(`Responsável: ${sessionState.professional.name} (${sessionState.professional.doc})`, 14, 55);
+            doc.text(`Data/Hora da Emissão Original: ${sessionState.metadata.time}`, 14, 62);
+            doc.text(`Nome do Arquivo Gerado: ${sessionState.pdfData.name}`, 14, 69);
+            
+            doc.setFillColor(245, 245, 245);
+            doc.rect(14, 75, 182, 35, 'F');
+            
+            doc.setFont('Inter', 'bold');
+            doc.text('Assinatura Criptográfica (SHA-256) do Relatório PDF:', 18, 85);
+            
+            doc.setFont('Courier', 'bold');
+            doc.setTextColor(34, 197, 94); // Green
+            
+            const hashLines = doc.splitTextToSize(sessionState.pdfData.hash, 170);
+            doc.text(hashLines, 18, 95);
+
+            doc.setFont('Inter', 'normal');
+            doc.setTextColor(100, 100, 100);
+            doc.setFontSize(9);
+            doc.text('Este documento comprova a integridade estrutural do relatório técnico gerado,', 14, 120);
+            doc.text('garantindo que não houve manipulação posterior das evidências relatadas.', 14, 125);
+
+            doc.save(`Recibo_Encadeamento_${Date.now()}.pdf`);
+        });
+
+    </script>
+</body>
+</html>
