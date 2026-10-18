@@ -5,10 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0a0a0f" />
     <title>Análise Facial Pericial</title>
-    <script type="module" crossorigin src="/face-forensic/assets/index-D-qKyeC5.js"></script>
-    <link rel="stylesheet" crossorigin href="/face-forensic/assets/index-CSXU9xD3.css">
+    <script type="module" crossorigin src="/face-forensic/assets/index-Dj9RX80w.js"></script>
+    <link rel="stylesheet" crossorigin href="/face-forensic/assets/index-CB1euffU.css">
   </head>
   <body>
+
+    <!-- ============================================ -->
+<!-- TELA DE BLOQUEIO (GATE)                      -->
+<!-- ============================================ -->
+<div id="auth-gate" class="auth-gate">
+  <div class="auth-gate__card">
+    <div class="auth-gate__icon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L3 6V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V6L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1 class="auth-gate__title">Acesso Restrito</h1>
+    <p class="auth-gate__subtitle">Insira seu token de acesso para continuar.</p>
+    
+    <div class="auth-gate__form">
+      <input 
+        id="auth-token-input" 
+        type="text" 
+        placeholder="Cole seu token aqui" 
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button id="auth-token-submit" type="button" class="btn btn--primary">
+        Validar Token
+      </button>
+    </div>
+    
+    <p id="auth-status" class="auth-gate__status"></p>
+  </div>
+</div>
+
+<!-- O app principal começa escondido -->
+<div id="app-container" class="hidden">
+  <!-- ... todo o seu <header>, <main> e <footer> originais ficam aqui dentro ... -->
+
+
     <header class="app-header">
       <h1 class="app-header__title">Análise Facial Pericial</h1>
       <p class="app-header__subtitle">Comparação biométrica de faces</p>
@@ -31,6 +68,7 @@
             type="text"
             placeholder="Ex: Maria Silva"
             autocomplete="off"
+            maxlength="80"
           />
         </div>
 
@@ -100,7 +138,19 @@
           <video id="camera-video" autoplay muted playsinline></video>
           <canvas id="landmarks-canvas-live" class="landmarks-canvas"></canvas>
           <div id="video-placeholder" class="video-placeholder">
-            <span class="video-placeholder__icon">📷</span>
+           <span class="video-placeholder__icon">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Cantos do scanner -->
+    <path d="M3 8V5C3 3.89543 3.89543 3 5 3H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <path d="M16 3H19C20.1046 3 21 3.89543 21 5V8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <path d="M21 16V19C21 20.1046 20.1046 21 19 21H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <path d="M8 21H5C3.89543 21 3 20.1046 3 19V16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <!-- Rosto geométrico no centro -->
+    <path d="M12 7V17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <path d="M9 9.5L12 7L15 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M9 14.5L12 17L15 14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</span>
             <span class="video-placeholder__text">Câmera desligada</span>
           </div>
         </div>
@@ -110,10 +160,11 @@
             Voltar
           </button>
           <button id="btn-capture" type="button" class="btn btn--primary" disabled>
-            Tirar foto
+            Capturar Foto
           </button>
         </div>
       </section>
+
 
       <!-- ============================================ -->
       <!-- PASSO 4 — RESULTADO                          -->
@@ -167,4 +218,5 @@
     </footer>
 
   </body>
+  </div>
 </html>
